@@ -1,1 +1,1 @@
-# Sistema do banco Bytebank
+# System Bytebank
