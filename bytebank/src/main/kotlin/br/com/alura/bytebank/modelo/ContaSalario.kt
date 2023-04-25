@@ -3,7 +3,7 @@ package br.com.alura.bytebank.modelo
 import br.com.alura.bytebank.modelo.Conta
 
 class ContaSalario(
-    titular: String,
+    titular: Cliente,
     numeroConta: Int
 ) : Conta(
     titular = titular,
