@@ -1,10 +1,12 @@
 package br.com.alura.bytebank.modelo
 
+import br.com.alura.bytebank.exception.FalhaAutenticacao
+import br.com.alura.bytebank.exception.SaldoInsuficienteException
 
 abstract class Conta(
     var titular: Cliente,
     val numeroConta: Int
-) {
+): Autenticavel {
     var saldo = 0.0
         protected set
 
@@ -16,6 +18,10 @@ abstract class Conta(
     init {
         println("Nova conta criada!")
         total++
+    }
+
+    override fun autentica(senha: Int): Boolean {
+        return titular.autentica(senha)
     }
 
     fun deposito(valor: Double) {
@@ -33,11 +39,10 @@ class ContaCorrente(
 ) : ContaTransferivel(
     titular = titular,
     numeroConta = numeroConta
-){
+) {
     override fun saque(valor: Double) {
-        val valorComTaxa = valor + 0.1
-        if (saldo >= valorComTaxa) {
-            saldo -= valorComTaxa
+        if (this.saldo >= valor) {
+            this.saldo -= valor
         }
     }
 }
@@ -50,8 +55,9 @@ class ContaPoupanca(
     numeroConta = numeroConta
 ) {
     override fun saque(valor: Double) {
-        if (this.saldo >= valor) {
-            this.saldo -= valor
+        val valorComTaxa = valor + 0.1
+        if (this.saldo >= valorComTaxa) {
+            this.saldo -= valorComTaxa
         }
     }
 }
@@ -70,19 +76,24 @@ class ContaSalario(
     }
 }
 
-abstract class ContaTransferivel (
+abstract class ContaTransferivel(
     titular: Cliente,
     numeroConta: Int
 ) : Conta(
     titular = titular,
     numeroConta = numeroConta
-){
-    fun transferencia(valor: Double, destino: Conta): Boolean {
-        if (saldo >= valor) {
-            this.saldo -= valor
-            destino.deposito(valor)
-            return true
+) {
+    fun transferencia(valor: Double, destino: Conta, senha: Int) {
+        if (saldo < valor) {
+            throw SaldoInsuficienteException(
+                mensagem = "Falha na transferência, saldo atual: $saldo. Valos da transferência: $valor"
+            )
         }
-        return false
+        if (!autentica(senha)) {
+            throw FalhaAutenticacao()
+        }
+//        throw NumberFormatException()
+        saldo -= valor
+        destino.deposito(valor)
     }
 }
